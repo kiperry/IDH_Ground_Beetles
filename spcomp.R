@@ -29,6 +29,14 @@ citation("betapart")
 library(pairwiseAdonis)
 citation("pairwiseAdonis")
 
+# set up color and point vectors for figures
+colvec1 <- c("darkorange1", "darkgoldenrod1", "black", "chartreuse4")
+colvec2 <- c("#FDE725FF", "#73D055FF", "#2D708EFF", "#481567FF")
+pchvec1 <- c(16, 17, 15, 18)
+pchvec2 <- c(19, 15, 4, 9)
+ltyvec <- c(1, 2, 3, 4)
+
+################################################################################
 ## Start with 2013
 ## Species data
 a13 <- read.csv("./PNR_Carabidae_2013.csv")
@@ -50,13 +58,6 @@ tail(a13)
 dim(a13)
 
 summary(a13)
-
-# set up color and point vectors for figures
-colvec1 <- c("darkorange1", "darkgoldenrod1", "black", "chartreuse4")
-colvec2 <- c("#FDE725FF", "#73D055FF", "#2D708EFF", "#481567FF")
-pchvec1 <- c(16, 17, 15, 18)
-pchvec2 <- c(19, 15, 4, 9)
-ltyvec <- c(1, 2, 3, 4)
 
 # need to pool species data across sampling intervals
 a13.2 <- melt(a13, id = c("Interval", "Quadrat", "Canopy", "Veg",
@@ -131,7 +132,7 @@ bark.j2 <- diversityresult(a13.4[5:45], y=NULL, index = "jack2")
 bark.j2
 
 
-#########################################################
+############################
 
 ## Partition beta-diversity of ground beetle communities among treatments
 
@@ -207,10 +208,114 @@ adonis2(a13.dist$beta.sne ~ a13.5$Treatment, permutations = 999)
 adonis2(a13.dist$beta.sne ~ a13.5$Canopy, permutations = 999)
 adonis2(a13.dist$beta.sne ~ a13.5$Veg, permutations = 999)
 
+################################################################################
+## Now 2014
+## Species data
+a14 <- read.csv("./PNR_Carabidae_2014.csv")
+str(a14)
 
-####################################################################
+# change treatments and sampling interval to factors
+a14$Canopy <- as.factor(a14$Canopy)
+a14$Veg <- as.factor(a14$Veg)
+a14$Interval <- as.factor(a14$Interval)
+a14$Treatment <- as.factor(a14$Treatment)
+a14$Quadrat <- as.factor(a14$Quadrat)
+str(a14)
 
-# now 2014
+# check data
+rowSums(a14[10:62], na.rm = TRUE)
+colSums(a14[10:62], na.rm = TRUE)
+head(a14)
+tail(a14)
+dim(a14)
+
+# need to remove the first sampling interval with all the NAs
+a14.2 <- a14[37:252,]
+
+summary(a14.2)
+
+# need to pool species data across sampling intervals
+a14.3 <- melt(a14.2, id = c("Interval", "Quadrat", "Canopy", "Veg",
+                          "Treatment", "Disturbance", "DateSet", "DateColl", "Trap_Days"))
+str(a14.3)
+
+# double check only species in the variable column
+levels(a14.3$variable)
+names(a14.3)[10] <- "Species"
+
+# now create data frame for community analyses
+a14.4 <- dcast(a14.3, Quadrat + Treatment + Canopy + Veg ~ Species, sum)
+
+# double check the numbers are the same
+colSums(a14.4[5:57])
+colSums(a14.4[5:57]) == colSums(a14[37:252,10:62], na.rm = TRUE)
+
+str(a14.4)
+
+# need to remove extra control sites
+a14.5 <- a14.4[1:24,]
+
+# remove columns with zero values
+# removes species not collected in these sites
+# thirteen species removed
+colSums(a14.5[5:57])
+
+a14.5 <- a14.5[, colSums(a14.5 != 0) > 0]
+colSums(a14.5[5:44])
+
+## Compare ground beetle species richness among treatments
+
+# individual-based rarefaction by treatment, jackknife estimates by treatment
+# first-order jackknife estimates are based on the number of singletons
+# second-order jackknife estimates are based on the number of singletons and doubletons
+
+levels(a14.5$Treatment)
+rare.a14.C <- a14.5[which(a14.5$Treatment == "Control"),]
+rare.a14.L <- a14.5[which(a14.5$Treatment == "Light"),]
+rare.a14.V <- a14.5[which(a14.5$Treatment == "Veg"),]
+rare.a14.LV <- a14.5[which(a14.5$Treatment == "Light+Veg"),]
+
+sp.a14.C <- specaccum(rare.a14.C[5:44], method = "rarefaction", permutations = 100, gamma = "jack2")
+sp.a14.L <- specaccum(rare.a14.L[5:44], method = "rarefaction", permutations = 100, gamma = "jack2")
+sp.a14.V <- specaccum(rare.a14.V[5:44], method = "rarefaction", permutations = 100, gamma = "jack2")
+sp.a14.LV <- specaccum(rare.a14.LV[5:44], method = "rarefaction", permutations = 100, gamma = "jack2")
+
+plot(sp.a14.C, pch = 19, col = "#481567FF", xvar = c("individuals"), lty = 4, lwd = 3,
+     ylab = "Species Richness", xlab = "Number of Individuals", xlim = c(0, 500), ylim = c(0, 35))
+plot(sp.a14.L, add = TRUE, pch = 15, xvar = c("individuals"), lty = 1, lwd = 3, col = "#FDE725FF")
+plot(sp.a14.V, add = TRUE, pch = 4, xvar = c("individuals"), lty = 2, lwd = 3, col = "#73D055FF")
+plot(sp.a14.LV, add = TRUE, pch = 9, xvar = c("individuals"), lty = 3, lwd = 3, col = "#2D708EFF")
+legend("bottomright", legend = c("Canopy","Understory","Canopy+Understory", "Undisturbed"), 
+       lty = ltyvec, bty = "n", lwd = 3, col = colvec2)
+
+levels(a14.5$Treatment)
+
+#calculates species richness for each site
+specnumber(a14.5[5:44])
+
+#calculates species richness by treatment
+specnumber(a14.5[5:44], groups = a14.5$Treatment)
+str(a14.5)
+
+bark.sp.j1 <- diversitycomp(a14.5[5:44], y = a14.5, factor1 = "Canopy", index = "jack1") #this isn't working and I'm not sure why... yet.
+bark.sp.j1
+bark.sp.j2 <- diversitycomp(a14.5[5:44], y = a14.5, factor1 = "Treatment", index = "jack2")
+bark.sp.j2
+
+bark.j1 <- diversityresult(a14.5[5:44], y=NULL, index = "jack1")
+bark.j1
+bark.j2 <- diversityresult(a14.5[5:44], y=NULL, index = "jack2")
+bark.j2
+
+
+#########################################################
+
+## Partition beta-diversity of ground beetle communities among treatments
+
+
+
+
+
 
 
 
