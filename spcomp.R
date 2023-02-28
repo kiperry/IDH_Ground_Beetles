@@ -312,10 +312,82 @@ bark.j2
 
 ## Partition beta-diversity of ground beetle communities among treatments
 
+#change data set to presence/absence for this part of the analyses
+a14.6 <- a14.5
+a14.6[a14.6 > 0] <- 1
+
+str(a14.6)
+rowSums(a14.6[5:44])
+colSums(a14.6[5:44])
+
+# create beta part object for analyses
+a14.core <- betapart.core(a14.6[5:44])
+
+# returns three dissimilarity matrices containing 
+# pairwise between-site values of each beta-diversity component
+a14.dist <- beta.pair(a14.core, index.family = "sorensen")
+str(a14.dist)
+
+# run NMDS models for total beta-diversity component
+
+## Beta.sor - Total beta-diversity
+nmds.a14.sor <- metaMDS(a14.dist$beta.sor, trymax = 500, autotransform = TRUE)
+nmds.a14.sor
+stressplot(nmds.a14.sor)
+goodness(nmds.a14.sor)
+nmds.a14.sor$stress #stress is quality of fit
+plot(nmds.a14.sor)
+
+ordiplot(nmds.a14.sor, type="n", xlim = c(-0.6, 0.6), ylim = c(-0.6, 0.6))
+points(nmds.a14.sor, display = "sites", pch = pchvec1[a14.6$Treatment], cex = 1.5, 
+       col = colvec2[a14.6$Treatment])
+ordiellipse(nmds.a14.sor, groups = a14.6$Treatment, display = "sites", draw = "lines", 
+            col = colvec2[a14.6$Treatment], lwd = 3, conf = 0.90)
+ordihull(nmds.a14.sor, groups = a14.6$Treatment, display = "sites", draw = c("polygon"), col = NULL,
+         border = colvec2[a14.6$Treatment], lwd = 2.5)
+legend("topleft", legend = c("Canopy","Understory","Canopy+Understory", "Undisturbed"), 
+       pch = pchvec1[a14.6$Treatment], cex = 1.2, bty = "n", col = colvec2[a14.6$Treatment])
+orditorp(nnmds.a14.sor, "sites") #used to double check the legend!
+
+# colors are messed up here, not sure why... yet.
+
+## Test for differences in ground beetle composition across disturbance treatments
+## for total beta-diversity component
+
+# PERMANOVA tests whether the group centroid of beetle communities among treatments
+# differs in multivariate space (e.g. different community composition)
+adonis2(a14.dist$beta.sor ~ a14.6$Treatment, permutations = 999)
+adonis2(a14.dist$beta.sor ~ a14.6$Canopy, permutations = 999)
+adonis2(a14.dist$beta.sor ~ a14.6$Veg, permutations = 999)
+pairwise.adonis(a14.dist$beta.sor, a14.6$Treatment)
+
+# BETADISPER tests whether the dispersion of a treatment from its spatial median is different
+# between groups (i.e. species redundancy across space)
+# analysis of multivariate homogeneity of group dispersions (variances)
+# multivariate analogue of Levene's test for homogenetiy of variances
+a14.beta.sor <- betadisper(a14.dist$beta.sor, a14.6$Treatment, type = c("median"))
+a14.beta.sor
+anova(a14.beta.sor)
+plot(a14.beta.sor)
+boxplot(a14.beta.sor, ylab = "Distance to median")
+TukeyHSD(a14.beta.sor, which = "group", conf.level = 0.95)
+
+# PERMANOVA tests for turnover and nestedness
+
+# turnover
+adonis2(a14.dist$beta.sim ~ a14.6$Treatment, permutations = 999)
+adonis2(a14.dist$beta.sim ~ a14.6$Canopy, permutations = 999)
+adonis2(a14.dist$beta.sim ~ a14.6$Veg, permutations = 999)
+
+# nestedness
+adonis2(a14.dist$beta.sne ~ a14.6$Treatment, permutations = 999)
+adonis2(a14.dist$beta.sne ~ a14.6$Canopy, permutations = 999)
+adonis2(a14.dist$beta.sne ~ a14.6$Veg, permutations = 999)
 
 
-
-
+################################################################################
+## Now 2015
+## Species data
 
 
 
