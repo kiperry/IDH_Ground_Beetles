@@ -17,15 +17,20 @@
 
 library(reshape2)
 
-library(BiodiversityR)
-citation("BiodiversityR")
+library(ggplot2)
+
+#library(BiodiversityR) #this package isn't working
+#citation("BiodiversityR")
+
+install.packages("iNEXT")
+library(iNEXT)
 
 library(betapart)
 citation("betapart")
 
-#install.packages("devtools")
-#library(devtools)
-#install_github("pmartinezarbizu/pairwiseAdonis/pairwiseAdonis")
+install.packages("devtools")
+library(devtools)
+install_github("pmartinezarbizu/pairwiseAdonis/pairwiseAdonis")
 library(pairwiseAdonis)
 citation("pairwiseAdonis")
 
@@ -85,52 +90,33 @@ a13.4 <- a13.3[1:24,]
 colSums(a13.4[5:52])
 
 a13.4 <- a13.4[, colSums(a13.4 != 0) > 0]
-colSums(a13.4[5:45])
+colSums(a13.4[5:45]) #can use this format for community composition analyses
+
+# need to revise format for rarefaction analyses
+
+a13.5 <- melt(a13.4, id = c("Treatment", "Quadrat", "Canopy", "Veg"))
+str(a13.5)
+# double check only species in the variable column
+levels(a13.5$variable)
+names(a13.5)[5] <- "Species"
+a13.6 <- dcast(a13.5, Species ~ Treatment, sum)
+str(a13.6)
+a13.7 <- a13.6[,-1]
+rownames(a13.7) <- a13.6[,1]
+a13.7 <- a13.7[,c(1,2,4,3)] #change column order
 
 ## Compare ground beetle species richness among treatments
+r13 <- iNEXT(a13.7, q = c(0, 1, 2), datatype = "abundance", nboot = 100)
 
-# individual-based rarefaction by treatment, jackknife estimates by treatment
-# first-order jackknife estimates are based on the number of singletons
-# second-order jackknife estimates are based on the number of singletons and doubletons
+ggiNEXT(r13, type = 1, se = TRUE, facet.var = "Assemblage",
+        color.var = "Assemblage", grey = TRUE) +
+  theme_bw(base_size = 18) +
+  theme(legend.position = "right")
+ggiNEXT(r13, type = 1, se = TRUE, facet.var = "Order.q", color.var = "Assemblage", grey = FALSE)
+ggiNEXT(r13, type = 2, se = TRUE, facet.var = "None", color.var = "Assemblage", grey = FALSE)
+ggiNEXT(r13, type = 3, se = TRUE, facet.var = "None", color.var = "Assemblage", grey = FALSE)
 
-levels(a13.4$Treatment)
-rare.a13.C <- a13.4[which(a13.4$Treatment == "Control"),]
-rare.a13.L <- a13.4[which(a13.4$Treatment == "Light"),]
-rare.a13.V <- a13.4[which(a13.4$Treatment == "Veg"),]
-rare.a13.LV <- a13.4[which(a13.4$Treatment == "Light+Veg"),]
-
-sp.a13.C <- specaccum(rare.a13.C[5:45], method = "rarefaction", permutations = 100, gamma = "jack2")
-sp.a13.L <- specaccum(rare.a13.L[5:45], method = "rarefaction", permutations = 100, gamma = "jack2")
-sp.a13.V <- specaccum(rare.a13.V[5:45], method = "rarefaction", permutations = 100, gamma = "jack2")
-sp.a13.LV <- specaccum(rare.a13.LV[5:45], method = "rarefaction", permutations = 100, gamma = "jack2")
-
-plot(sp.a13.C, pch = 19, col = "#481567FF", xvar = c("individuals"), lty = 4, lwd = 3,
-     ylab = "Species Richness", xlab = "Number of Individuals", xlim = c(0, 300), ylim = c(0, 35))
-plot(sp.a13.L, add = TRUE, pch = 15, xvar = c("individuals"), lty = 1, lwd = 3, col = "#FDE725FF")
-plot(sp.a13.V, add = TRUE, pch = 4, xvar = c("individuals"), lty = 2, lwd = 3, col = "#73D055FF")
-plot(sp.a13.LV, add = TRUE, pch = 9, xvar = c("individuals"), lty = 3, lwd = 3, col = "#2D708EFF")
-legend("bottomright", legend = c("Canopy","Understory","Canopy+Understory", "Undisturbed"), 
-       lty = ltyvec, bty = "n", lwd = 3, col = colvec2)
-
-levels(a13.4$Treatment)
-
-#calculates species richness for each site
-specnumber(a13.4[5:45])
-
-#calculates species richness by treatment
-specnumber(a13.4[5:45], groups = a13.4$Treatment)
-str(a13.4)
-
-bark.sp.j1 <- diversitycomp(a13.4[5:45], y = a13.4, factor1 = "Canopy", factor2 = "Veg", index = "jack1") #this isn't working and I'm not sure why... yet.
-bark.sp.j1
-bark.sp.j2 <- diversitycomp(a13.4[5:45], y = a13.4, factor1 = "Treatment", index = "jack2")
-bark.sp.j2
-
-bark.j1 <- diversityresult(a13.4[5:45], y=NULL, index = "jack1")
-bark.j1
-bark.j2 <- diversityresult(a13.4[5:45], y=NULL, index = "jack2")
-bark.j2
-
+#the confidence intervals of any standardized diversity are obtained by a bootstrap method.
 
 ############################
 
