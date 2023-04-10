@@ -19,26 +19,21 @@ library(reshape2)
 
 library(ggplot2)
 
-#library(BiodiversityR) #this package isn't working
-#citation("BiodiversityR")
-
-install.packages("iNEXT")
-library(iNEXT)
+library(viridis)
 
 library(betapart)
 citation("betapart")
 
-install.packages("devtools")
-library(devtools)
-install_github("pmartinezarbizu/pairwiseAdonis/pairwiseAdonis")
+#install.packages("devtools")
+#library(devtools)
+#install_github("pmartinezarbizu/pairwiseAdonis/pairwiseAdonis")
 library(pairwiseAdonis)
 citation("pairwiseAdonis")
 
 # set up color and point vectors for figures
+colvec1 <- c("#FDE725FF", "#73D055FF", "#2D708EFF", "#481567FF")
 colvec1 <- c("darkorange1", "darkgoldenrod1", "black", "chartreuse4")
-colvec2 <- c("#FDE725FF", "#73D055FF", "#2D708EFF", "#481567FF")
 pchvec1 <- c(16, 17, 15, 18)
-pchvec2 <- c(19, 15, 4, 9)
 ltyvec <- c(1, 2, 3, 4)
 
 ################################################################################
@@ -64,7 +59,7 @@ dim(a13)
 
 summary(a13)
 
-# need to pool species data across sampling intervals
+# need to pool species data across sampling intervals for community analyses
 a13.2 <- melt(a13, id = c("Interval", "Quadrat", "Canopy", "Veg",
                          "Treatment", "Disturbance", "DateSet", "DateColl", "Trap_Days"))
 str(a13.2)
@@ -91,32 +86,6 @@ colSums(a13.4[5:52])
 
 a13.4 <- a13.4[, colSums(a13.4 != 0) > 0]
 colSums(a13.4[5:45]) #can use this format for community composition analyses
-
-# need to revise format for rarefaction analyses
-
-a13.5 <- melt(a13.4, id = c("Treatment", "Quadrat", "Canopy", "Veg"))
-str(a13.5)
-# double check only species in the variable column
-levels(a13.5$variable)
-names(a13.5)[5] <- "Species"
-a13.6 <- dcast(a13.5, Species ~ Treatment, sum)
-str(a13.6)
-a13.7 <- a13.6[,-1]
-rownames(a13.7) <- a13.6[,1]
-a13.7 <- a13.7[,c(1,2,4,3)] #change column order
-
-## Compare ground beetle species richness among treatments
-r13 <- iNEXT(a13.7, q = c(0, 1, 2), datatype = "abundance", nboot = 100)
-
-ggiNEXT(r13, type = 1, se = TRUE, facet.var = "Assemblage",
-        color.var = "Assemblage", grey = TRUE) +
-  theme_bw(base_size = 18) +
-  theme(legend.position = "right")
-ggiNEXT(r13, type = 1, se = TRUE, facet.var = "Order.q", color.var = "Assemblage", grey = FALSE)
-ggiNEXT(r13, type = 2, se = TRUE, facet.var = "None", color.var = "Assemblage", grey = FALSE)
-ggiNEXT(r13, type = 3, se = TRUE, facet.var = "None", color.var = "Assemblage", grey = FALSE)
-
-#the confidence intervals of any standardized diversity are obtained by a bootstrap method.
 
 ############################
 
@@ -150,14 +119,12 @@ plot(nmds.a13.sor)
 
 ordiplot(nmds.a13.sor, type="n", xlim = c(-1, 0.8), ylim = c(-0.6, 0.6))
 points(nmds.a13.sor, display = "sites", pch = pchvec1[a13.5$Treatment], cex = 1.5, 
-       col = colvec2[a13.5$Treatment])
+       col = colvec1[a13.5$Treatment])
 ordiellipse(nmds.a13.sor, groups = a13.5$Treatment, display = "sites", draw = "lines", 
-            col = colvec2[a13.5$Treatment], lwd = 3, conf = 0.90)
-ordihull(nmds.a13.sor, groups = a13.5$Treatment, display = "sites", draw = c("polygon"), col = NULL,
-         border = colvec2[a13.5$Treatment], lwd = 2.5)
+            col = colvec1[a13.5$Treatment], lwd = 3, conf = 0.90)
 legend("topleft", legend = c("Canopy","Understory","Canopy+Understory", "Undisturbed"), 
-       pch = pchvec1[a13.5$Treatment], cex = 1.2, bty = "n", col = colvec2[a13.5$Treatment])
-orditorp(nnmds.a13.sor, "sites") #used to double check the legend!
+       pch = pchvec1[a13.5$Treatment], cex = 1.2, bty = "n", col = colvec1[a13.5$Treatment])
+orditorp(nmds.a13.sor, "sites") #used to double check the legend!
 
 # colors are messed up here, not sure why... yet.
 
