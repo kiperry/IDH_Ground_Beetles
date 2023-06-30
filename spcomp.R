@@ -49,6 +49,8 @@ dim(a13)
 
 summary(a13)
 
+###################################################################################
+
 # need to pool species data across sampling intervals for community analyses
 a13.2 <- melt(a13, id = c("Interval", "Quadrat", "Canopy", "Veg",
                          "Treatment", "Disturbance", "DateSet", "DateColl", "Trap_Days"))
@@ -67,101 +69,99 @@ colSums(a13.3[5:52]) == colSums(a13[10:57])
 
 str(a13.3)
 
+###################################################################################
 # need to remove extra control sites
-a13.4 <- a13.3[1:24,]
+a13.3.2 <- a13.3[1:24,]
 
-# remove columns with zero values
-# removes species not collected in these sites
-# seven species removed
-colSums(a13.3[5:52])
-colSums(a13.4[5:52])
+# need to remove columns with zero values
+# removes species not collected in these sites during this year
+a13.4 <- a13.3.2[, colSums(a13.3.2 !=0) > 0]
 
-a13.4 <- a13.3[, colSums(a13.3 != 0) > 0]
-colSums(a13.4[6:46]) #can use this format for community composition analyses
-a13.4 <- a13.4[, colSums(a13.4 != 0) > 0]
-colSums(a13.4[6:46]) #can use this format for community composition analyses
+colSums(a13.4[5:45])
+# can use this format for community composition analyses
 
-############################
+##################################################################################
 
 ## Partition beta-diversity of ground beetle communities among treatments
 
-#change data set to presence/absence for this part of the analyses
-a13.5 <- a13.4
+#change data set to presence/absence
+a13.5 <- a13.4 # make a copy
 a13.5[a13.5 > 0] <- 1
 
 str(a13.5)
-rowSums(a13.5[6:46])
-colSums(a13.5[6:46])
+rowSums(a13.5[6:45])
+colSums(a13.5[6:45])
+
+# order the treatments so it makes sense in the figure below
+a13.5$Treatment <- factor(a13.5$Treatment, levels = c("Light", "Veg", "Light+Veg", "Control"))
+
+## Taxonomic beta-diversity
 
 # create beta part object for analyses
-a13.core <- betapart.core(a13.5[6:46])
+a13.core <- betapart.core(a13.5[6:45])
 
 # returns three dissimilarity matrices containing 
 # pairwise between-site values of each beta-diversity component
-a13.dist <- beta.pair(a13.core, index.family = "sorensen")
-str(a13.dist)
+# total (sor), turnover (sim), and nestedness (sne)
+a13.t.dist <- beta.pair(a13.core, index.family = "sorensen")
+str(a13.t.dist)
 
-# run NMDS models for total beta-diversity component
+# run NMDS models for total beta-diversity component (sor)
+nmds.a13.t.sor <- metaMDS(a13.t.dist$beta.sor, trymax = 500, autotransform = TRUE)
+nmds.a13.t.sor
+stressplot(nmds.a13.t.sor)
+goodness(nmds.a13.t.sor)
+nmds.a13.t.sor$stress #stress is quality of fit
+plot(nmds.a13.t.sor)
 
-## Beta.sor - Total beta-diversity
-nmds.a13.sor <- metaMDS(a13.dist$beta.sor, trymax = 500, autotransform = TRUE)
-nmds.a13.sor
-stressplot(nmds.a13.sor)
-goodness(nmds.a13.sor)
-nmds.a13.sor$stress #stress is quality of fit
-plot(nmds.a13.sor)
+# plot the NMDS model
+ordiplot(nmds.a13.t.sor, disp = "sites", type = "n", xlim = c(-0.7, 0.7), ylim = c(-0.6, 0.8))
+points(nmds.a13.t.sor, dis = "sites", select = which(a13.5$Treatment=="Light"), pch = 16, cex = 2, col = "#FDE725FF")
+points(nmds.a13.t.sor, dis = "sites", select = which(a13.5$Treatment=="Veg"), pch = 17, cex = 2, col = "#73D055FF")
+points(nmds.a13.t.sor, dis = "sites", select = which(a13.5$Treatment=="Light+Veg"), pch = 15, cex = 2, col = "#2D708EFF")
+points(nmds.a13.t.sor, dis = "sites", select = which(a13.5$Treatment=="Control"), pch = 18, cex = 2, col = "#481567FF")
 
-a13.5$Treatment <- factor(a13.5$Treatment, levels = c("Light", "Veg", "Light+Veg", "Control"))
-a13.5$Treatment_Code <- factor(a13.5$Treatment_Code, levels = c("A", "B", "C", "D"))
+ordiellipse(nmds.a13.t.sor, a13.5$Treatment, draw = "lines", col = c("#FDE725FF", "#73D055FF", "#2D708EFF", "#481567FF"), 
+            lwd = 3, kind = "sd", conf = 0.95, label = FALSE)
 
+legend("topright", legend = c("Canopy", "Understory", "Canopy+Understory", "Undisturbed"),
+       pch = c(16, 17, 15, 18), cex = 1.5, bty = "n", col = c("#FDE725FF", "#73D055FF", "#2D708EFF", "#481567FF"))
 
-ordiplot(nmds.a13.sor, type="n", xlim = c(-0.8, 0.6), ylim = c(-0.6, 0.6))
+#orditorp(nmds.a15.t.sor, "sites") #used to double check the legend!
 
-points(nmds.a13.sor, display = "sites", pch = pchvec1[a13.5$Treatment], cex = 1.5, 
-       col = colvec1[a13.5$Treatment])
-
-ordiellipse(nmds.a13.sor, groups = a13.5$Treatment, display = "sites", draw = "lines",
-            lwd = 3, conf = 0.90, col = colvec1[a13.5$Treatment])
-
-legend("topleft", legend = c("Canopy","Understory","Canopy+Understory", "Undisturbed"), 
-       pch = pchvec1[a13.5$Treatment], cex = 1.2, bty = "n", col = colvec1[a13.5$Treatment])
-
-orditorp(nmds.a13.sor, "sites") #used to double check the legend!
-
-# colors are messed up here, not sure why... yet.
 
 ## Test for differences in ground beetle composition across disturbance treatments
 ## for total beta-diversity component
 
 # PERMANOVA tests whether the group centroid of beetle communities among treatments
 # differs in multivariate space (e.g. different community composition)
-adonis2(a13.dist$beta.sor ~ a13.5$Treatment, permutations = 999)
-adonis2(a13.dist$beta.sor ~ a13.5$Canopy, permutations = 999)
-adonis2(a13.dist$beta.sor ~ a13.5$Veg, permutations = 999)
-pairwise.adonis(a13.dist$beta.sor, a13.5$Treatment)
+adonis2(a13.t.dist$beta.sor ~ a13.5$Treatment, permutations = 999)
+adonis2(a13.t.dist$beta.sor ~ a13.5$Canopy, permutations = 999)
+adonis2(a13.t.dist$beta.sor ~ a13.5$Veg, permutations = 999)
+pairwise.adonis(a13.t.dist$beta.sor, a13.5$Treatment)
 
 # BETADISPER tests whether the dispersion of a treatment from its spatial median is different
 # between groups (i.e. species redundancy across space)
 # analysis of multivariate homogeneity of group dispersions (variances)
 # multivariate analogue of Levene's test for homogenetiy of variances
-a13.beta.sor <- betadisper(a13.dist$beta.sor, a13.5$Treatment, type = c("median"))
-a13.beta.sor
-anova(a13.beta.sor)
-plot(a13.beta.sor)
-boxplot(a13.beta.sor, ylab = "Distance to median")
-TukeyHSD(a13.beta.sor, which = "group", conf.level = 0.95)
+a13.tbeta.sor <- betadisper(a13.t.dist$beta.sor, a13.5$Treatment, type = c("median"))
+a13.tbeta.sor
+anova(a13.tbeta.sor)
+plot(a13.tbeta.sor)
+boxplot(a13.tbeta.sor, ylab = "Distance to median")
+TukeyHSD(a13.tbeta.sor, which = "group", conf.level = 0.95)
 
 # PERMANOVA tests for turnover and nestedness
 
 # turnover
-adonis2(a13.dist$beta.sim ~ a13.5$Treatment, permutations = 999)
-adonis2(a13.dist$beta.sim ~ a13.5$Canopy, permutations = 999)
-adonis2(a13.dist$beta.sim ~ a13.5$Veg, permutations = 999)
+adonis2(a13.t.dist$beta.sim ~ a13.5$Treatment, permutations = 999)
+adonis2(a13.t.dist$beta.sim ~ a13.5$Canopy, permutations = 999)
+adonis2(a13.t.dist$beta.sim ~ a13.5$Veg, permutations = 999)
 
 # nestedness
-adonis2(a13.dist$beta.sne ~ a13.5$Treatment, permutations = 999)
-adonis2(a13.dist$beta.sne ~ a13.5$Canopy, permutations = 999)
-adonis2(a13.dist$beta.sne ~ a13.5$Veg, permutations = 999)
+adonis2(a13.t.dist$beta.sne ~ a13.5$Treatment, permutations = 999)
+adonis2(a13.t.dist$beta.sne ~ a13.5$Canopy, permutations = 999)
+adonis2(a13.t.dist$beta.sne ~ a13.5$Veg, permutations = 999)
 
 ################################################################################
 ## Now 2014
@@ -185,9 +185,12 @@ tail(a14)
 dim(a14)
 
 # need to remove the first sampling interval with all the NAs
+# couldn't sample in sites when treatments were being established
 a14.2 <- a14[37:252,]
 
 summary(a14.2)
+
+###################################################################################
 
 # need to pool species data across sampling intervals
 a14.3 <- melt(a14.2, id = c("Interval", "Quadrat", "Canopy", "Veg",
@@ -205,70 +208,25 @@ a14.4 <- dcast(a14.3, Quadrat + Treatment + Canopy + Veg ~ Species, sum)
 colSums(a14.4[5:57])
 colSums(a14.4[5:57]) == colSums(a14[37:252,10:62], na.rm = TRUE)
 
-str(a14.4)
-
+###################################################################################
 # need to remove extra control sites
-a14.5 <- a14.4[1:24,]
+a14.4.2 <- a14.4[1:24,]
+colSums(a14.4.2[5:57])
 
-# remove columns with zero values
-# removes species not collected in these sites
-# thirteen species removed
-colSums(a14.5[5:57])
+# need to remove columns with zero values
+# removes species not collected in these sites during this year
+a14.5 <- a14.4.2[, colSums(a14.4.2 !=0) > 0]
 
-a14.5 <- a14.5[, colSums(a14.5 != 0) > 0]
+# removed thirteen species
 colSums(a14.5[5:44])
+# can use this format for community composition analyses
 
-## Compare ground beetle species richness among treatments
-
-# individual-based rarefaction by treatment, jackknife estimates by treatment
-# first-order jackknife estimates are based on the number of singletons
-# second-order jackknife estimates are based on the number of singletons and doubletons
-
-levels(a14.5$Treatment)
-rare.a14.C <- a14.5[which(a14.5$Treatment == "Control"),]
-rare.a14.L <- a14.5[which(a14.5$Treatment == "Light"),]
-rare.a14.V <- a14.5[which(a14.5$Treatment == "Veg"),]
-rare.a14.LV <- a14.5[which(a14.5$Treatment == "Light+Veg"),]
-
-sp.a14.C <- specaccum(rare.a14.C[5:44], method = "rarefaction", permutations = 100, gamma = "jack2")
-sp.a14.L <- specaccum(rare.a14.L[5:44], method = "rarefaction", permutations = 100, gamma = "jack2")
-sp.a14.V <- specaccum(rare.a14.V[5:44], method = "rarefaction", permutations = 100, gamma = "jack2")
-sp.a14.LV <- specaccum(rare.a14.LV[5:44], method = "rarefaction", permutations = 100, gamma = "jack2")
-
-plot(sp.a14.C, pch = 19, col = "#481567FF", xvar = c("individuals"), lty = 4, lwd = 3,
-     ylab = "Species Richness", xlab = "Number of Individuals", xlim = c(0, 500), ylim = c(0, 35))
-plot(sp.a14.L, add = TRUE, pch = 15, xvar = c("individuals"), lty = 1, lwd = 3, col = "#FDE725FF")
-plot(sp.a14.V, add = TRUE, pch = 4, xvar = c("individuals"), lty = 2, lwd = 3, col = "#73D055FF")
-plot(sp.a14.LV, add = TRUE, pch = 9, xvar = c("individuals"), lty = 3, lwd = 3, col = "#2D708EFF")
-legend("bottomright", legend = c("Canopy","Understory","Canopy+Understory", "Undisturbed"), 
-       lty = ltyvec, bty = "n", lwd = 3, col = colvec2)
-
-levels(a14.5$Treatment)
-
-#calculates species richness for each site
-specnumber(a14.5[5:44])
-
-#calculates species richness by treatment
-specnumber(a14.5[5:44], groups = a14.5$Treatment)
-str(a14.5)
-
-bark.sp.j1 <- diversitycomp(a14.5[5:44], y = a14.5, factor1 = "Canopy", index = "jack1") #this isn't working and I'm not sure why... yet.
-bark.sp.j1
-bark.sp.j2 <- diversitycomp(a14.5[5:44], y = a14.5, factor1 = "Treatment", index = "jack2")
-bark.sp.j2
-
-bark.j1 <- diversityresult(a14.5[5:44], y=NULL, index = "jack1")
-bark.j1
-bark.j2 <- diversityresult(a14.5[5:44], y=NULL, index = "jack2")
-bark.j2
-
-
-#########################################################
+###################################################################################
 
 ## Partition beta-diversity of ground beetle communities among treatments
 
-#change data set to presence/absence for this part of the analyses
-a14.6 <- a14.5
+# change data set to presence/absence
+a14.6 <- a14.5 # make a copy
 a14.6[a14.6 > 0] <- 1
 
 str(a14.6)
@@ -280,65 +238,66 @@ a14.core <- betapart.core(a14.6[5:44])
 
 # returns three dissimilarity matrices containing 
 # pairwise between-site values of each beta-diversity component
-a14.dist <- beta.pair(a14.core, index.family = "sorensen")
-str(a14.dist)
+# total (sor), turnover (sim), and nestedness (sne)
+a14.t.dist <- beta.pair(a14.core, index.family = "sorensen")
+str(a14.t.dist)
 
-# run NMDS models for total beta-diversity component
+# run NMDS models for total beta-diversity component (sor)
+nmds.a14.t.sor <- metaMDS(a14.t.dist$beta.sor, trymax = 500, autotransform = TRUE)
+nmds.a14.t.sor
+stressplot(nmds.a14.t.sor)
+goodness(nmds.a14.t.sor)
+nmds.a14.t.sor$stress #stress is quality of fit
+plot(nmds.a14.t.sor)
 
-## Beta.sor - Total beta-diversity
-nmds.a14.sor <- metaMDS(a14.dist$beta.sor, trymax = 500, autotransform = TRUE)
-nmds.a14.sor
-stressplot(nmds.a14.sor)
-goodness(nmds.a14.sor)
-nmds.a14.sor$stress #stress is quality of fit
-plot(nmds.a14.sor)
+# plot the NMDS model
+ordiplot(nmds.a14.t.sor, disp = "sites", type = "n", xlim = c(-0.7, 0.6), ylim = c(-0.4, 0.4))
+points(nmds.a14.t.sor, dis = "sites", select = which(a14.6$Treatment=="Light"), pch = 16, cex = 2, col = "#FDE725FF")
+points(nmds.a14.t.sor, dis = "sites", select = which(a14.6$Treatment=="Veg"), pch = 17, cex = 2, col = "#73D055FF")
+points(nmds.a14.t.sor, dis = "sites", select = which(a14.6$Treatment=="Light+Veg"), pch = 15, cex = 2, col = "#2D708EFF")
+points(nmds.a14.t.sor, dis = "sites", select = which(a14.6$Treatment=="Control"), pch = 18, cex = 2, col = "#481567FF")
 
-ordiplot(nmds.a14.sor, type="n", xlim = c(-0.6, 0.6), ylim = c(-0.6, 0.6))
-points(nmds.a14.sor, display = "sites", pch = pchvec1[a14.6$Treatment], cex = 1.5, 
-       col = colvec2[a14.6$Treatment])
-ordiellipse(nmds.a14.sor, groups = a14.6$Treatment, display = "sites", draw = "lines", 
-            col = colvec2[a14.6$Treatment], lwd = 3, conf = 0.90)
-ordihull(nmds.a14.sor, groups = a14.6$Treatment, display = "sites", draw = c("polygon"), col = NULL,
-         border = colvec2[a14.6$Treatment], lwd = 2.5)
-legend("topleft", legend = c("Canopy","Understory","Canopy+Understory", "Undisturbed"), 
-       pch = pchvec1[a14.6$Treatment], cex = 1.2, bty = "n", col = colvec2[a14.6$Treatment])
-orditorp(nnmds.a14.sor, "sites") #used to double check the legend!
+ordiellipse(nmds.a14.t.sor, a14.6$Treatment, draw = "lines", col = c("#FDE725FF", "#73D055FF", "#2D708EFF", "#481567FF"), 
+            lwd = 3, kind = "sd", conf = 0.95, label = FALSE)
 
-# colors are messed up here, not sure why... yet.
+legend("bottomleft", legend = c("Canopy", "Understory", "Canopy+Understory", "Undisturbed"),
+       pch = c(16, 17, 15, 18), cex = 1.5, bty = "n", col = c("#FDE725FF", "#73D055FF", "#2D708EFF", "#481567FF"))
+
+#orditorp(nmds.a15.t.sor, "sites") #used to double check the legend!
 
 ## Test for differences in ground beetle composition across disturbance treatments
 ## for total beta-diversity component
 
+
 # PERMANOVA tests whether the group centroid of beetle communities among treatments
 # differs in multivariate space (e.g. different community composition)
-adonis2(a14.dist$beta.sor ~ a14.6$Treatment, permutations = 999)
-adonis2(a14.dist$beta.sor ~ a14.6$Canopy, permutations = 999)
-adonis2(a14.dist$beta.sor ~ a14.6$Veg, permutations = 999)
-pairwise.adonis(a14.dist$beta.sor, a14.6$Treatment)
+adonis2(a14.t.dist$beta.sor ~ a14.6$Treatment, permutations = 999)
+adonis2(a14.t.dist$beta.sor ~ a14.6$Canopy, permutations = 999)
+adonis2(a14.t.dist$beta.sor ~ a14.6$Veg, permutations = 999)
+pairwise.adonis(a14.t.dist$beta.sor, a14.6$Treatment)
 
 # BETADISPER tests whether the dispersion of a treatment from its spatial median is different
 # between groups (i.e. species redundancy across space)
 # analysis of multivariate homogeneity of group dispersions (variances)
 # multivariate analogue of Levene's test for homogenetiy of variances
-a14.beta.sor <- betadisper(a14.dist$beta.sor, a14.6$Treatment, type = c("median"))
-a14.beta.sor
-anova(a14.beta.sor)
-plot(a14.beta.sor)
-boxplot(a14.beta.sor, ylab = "Distance to median")
-TukeyHSD(a14.beta.sor, which = "group", conf.level = 0.95)
+a14.tbeta.sor <- betadisper(a14.t.dist$beta.sor, a14.6$Treatment, type = c("median"))
+a14.tbeta.sor
+anova(a14.tbeta.sor)
+plot(a14.tbeta.sor)
+boxplot(a14.tbeta.sor, ylab = "Distance to median")
+TukeyHSD(a14.tbeta.sor, which = "group", conf.level = 0.95)
 
 # PERMANOVA tests for turnover and nestedness
 
 # turnover
-adonis2(a14.dist$beta.sim ~ a14.6$Treatment, permutations = 999)
-adonis2(a14.dist$beta.sim ~ a14.6$Canopy, permutations = 999)
-adonis2(a14.dist$beta.sim ~ a14.6$Veg, permutations = 999)
+adonis2(a14.t.dist$beta.sim ~ a14.6$Treatment, permutations = 999)
+adonis2(a14.t.dist$beta.sim ~ a14.6$Canopy, permutations = 999)
+adonis2(a14.t.dist$beta.sim ~ a14.6$Veg, permutations = 999)
 
 # nestedness
-adonis2(a14.dist$beta.sne ~ a14.6$Treatment, permutations = 999)
-adonis2(a14.dist$beta.sne ~ a14.6$Canopy, permutations = 999)
-adonis2(a14.dist$beta.sne ~ a14.6$Veg, permutations = 999)
-
+adonis2(a14.t.dist$beta.sne ~ a14.6$Treatment, permutations = 999)
+adonis2(a14.t.dist$beta.sne ~ a14.6$Canopy, permutations = 999)
+adonis2(a14.t.dist$beta.sne ~ a14.6$Veg, permutations = 999)
 
 ################################################################################
 ## Now 2015
