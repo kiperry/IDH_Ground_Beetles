@@ -440,7 +440,7 @@ adonis2(a15.t.dist$beta.sne ~ a15.5$Veg, permutations = 999)
 
 ##################################################################################
 
-
+## Functional beta-diversity
 
 
 
