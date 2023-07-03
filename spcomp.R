@@ -129,7 +129,6 @@ legend("topright", legend = c("Canopy", "Understory", "Canopy+Understory", "Undi
 
 #orditorp(nmds.a15.t.sor, "sites") #used to double check the legend!
 
-
 ## Test for differences in ground beetle composition across disturbance treatments
 ## for total beta-diversity component
 
@@ -162,6 +161,13 @@ adonis2(a13.t.dist$beta.sim ~ a13.5$Veg, permutations = 999)
 adonis2(a13.t.dist$beta.sne ~ a13.5$Treatment, permutations = 999)
 adonis2(a13.t.dist$beta.sne ~ a13.5$Canopy, permutations = 999)
 adonis2(a13.t.dist$beta.sne ~ a13.5$Veg, permutations = 999)
+
+# do we want to incorporate abundances?
+a13.nmds <- metaMDS(a13.4[5:45], distance = "bray", trymax = 500, autotransform = TRUE)
+a13.dist <- vegdist(a13.4[5:45], distance = "bray", binary = FALSE)
+adonis2(a13.dist ~ a13.4$Treatment, permutations = 999)
+adonis2(a13.dist ~ a13.4$Canopy, permutations = 999)
+adonis2(a13.dist ~ a13.4$Veg, permutations = 999)
 
 ################################################################################
 ## Now 2014
@@ -298,6 +304,14 @@ adonis2(a14.t.dist$beta.sim ~ a14.6$Veg, permutations = 999)
 adonis2(a14.t.dist$beta.sne ~ a14.6$Treatment, permutations = 999)
 adonis2(a14.t.dist$beta.sne ~ a14.6$Canopy, permutations = 999)
 adonis2(a14.t.dist$beta.sne ~ a14.6$Veg, permutations = 999)
+
+# do we want to incorporate abundances?
+a14.nmds <- metaMDS(a14.5[5:44], distance = "bray", trymax = 500, autotransform = TRUE)
+a14.dist <- vegdist(a14.5[5:44], distance = "bray", binary = FALSE)
+adonis2(a14.dist ~ a14.5$Treatment, permutations = 999)
+adonis2(a14.dist ~ a14.5$Canopy, permutations = 999)
+adonis2(a14.dist ~ a14.5$Veg, permutations = 999)
+pairwise.adonis(a14.dist, a14.5$Treatment)
 
 ################################################################################
 ## Now 2015
@@ -438,22 +452,53 @@ adonis2(a15.t.dist$beta.sne ~ a15.5$Canopy, permutations = 999) # canopy gap nes
 pairwise.adonis(a15.t.dist$beta.sne, a15.5$Canopy)
 adonis2(a15.t.dist$beta.sne ~ a15.5$Veg, permutations = 999)
 
+# do we want to incorporate abundances?
+a15.nmds <- metaMDS(a15.4[5:46], distance = "bray", trymax = 500, autotransform = TRUE)
+a15.dist <- vegdist(a15.4[5:46], distance = "bray", binary = FALSE)
+adonis2(a15.dist ~ a15.4$Treatment, permutations = 999)
+adonis2(a15.dist ~ a15.4$Canopy, permutations = 999)
+adonis2(a15.dist ~ a15.4$Veg, permutations = 999)
+pairwise.adonis(a15.dist, a15.4$Treatment)
+
 ##################################################################################
 
 ## Functional beta-diversity
 
+# load the trait data
+t <- read.csv("./PNR_Carabidae_Traits.csv", row.names = 1)
 
-
-
-## code for trait data and functional beta-diversity analyses
-## will get to this soon, after taxonomic beta-diversity analyses
-## Trait data
-t <- read.csv("./bb_rtraits_v3.csv", row.names=1)
-#trim the trait dataset by identifying traits that are highly correlated
-#or lack sufficient variance among species
 names(t)
 str(t)
 plot(t)
+
+library(ggplot2)
+library(GGally)
+cor(t, method = c("pearson"), use = "complete.obs")
+cp <- ggpairs(t, upper = list(continuous = wrap("cor", size = 5, color = "black")))
+cp + theme(strip.text.x = element_text(size = 18), strip.text.y = element_text(size = 14))
+
+# remove traits that are highly correlated
+t2 <- t[,-3] # minimum body length
+t2 <- t2[,-3] # maximum body length
+
+t2 <- t2[,-7] # antennae length
+
+cp <- ggpairs(t2, upper = list(continuous = wrap("cor", size = 5, color = "black")))
+cp + theme(strip.text.x = element_text(size = 18), strip.text.y = element_text(size = 14))
+
+# all correlations now below 0.70
+
+# Create pairplot - for Appendix
+png("Corplot_Traits.png", width = 1800, height = 1000, pointsize = 40)
+cp <- ggpairs(t, upper = list(continuous = wrap("cor", size = 5, color = "black")))
+cp + theme(strip.text.x = element_text(size = 23), strip.text.y = element_text(size = 20))
+dev.off()
+
+##################################################################################
+
+# now we have to match up the trait matrix with every abundance matrix
+
+
 
 #Double check that all species are present in both datasets
 intersect(colnames(a), rownames(t3))
