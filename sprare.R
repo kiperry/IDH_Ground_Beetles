@@ -19,9 +19,6 @@ library(viridis)
 library(vegan)
 library(fossil)
 
-#library(iNEXT)
-#citation("iNEXT")
-
 ################################################################################
 ## Start with 2013
 ## Species data
@@ -378,5 +375,45 @@ jack2(rare.a15.LV[5:46], taxa.row = FALSE, abund = TRUE)
 jack1(rare.a15.C[5:46], taxa.row = FALSE, abund = TRUE)
 jack2(rare.a15.C[5:46], taxa.row = FALSE, abund = TRUE)
 
+################################################################################
+
 ## Create panel figure
 
+png("Sp_Rare.png", width = 1000, height = 2500, pointsize = 30)
+
+par(mfrow=c(3,1))
+par(mar=c(5,8,4,2))
+
+# 2013
+plot(sp.a13.C, pch = 19, col = "#481567FF", xvar = c("individuals"), lty = 4, lwd = 4,
+     ylab = "Species Richness", xlab = "Number of Individuals",
+     cex.lab = 1.6, cex.axis = 1.2, xlim = c(0, 400), ylim = c(0, 35))
+plot(sp.a13.L, add = TRUE, pch = 15, xvar = c("individuals"), lty = 1, lwd = 4, col = "#FDE725FF")
+plot(sp.a13.V, add = TRUE, pch = 4, xvar = c("individuals"), lty = 2, lwd = 4, col = "#73D055FF")
+plot(sp.a13.LV, add = TRUE, pch = 9, xvar = c("individuals"), lty = 3, lwd = 4, col = "#2D708EFF")
+text(15, 33, "2013", pos = 3, font = 2, cex = 2)
+
+legend("bottomright", legend = c("Canopy", "Understory", "Canopy+Understory", "Undisturbed"),
+       pch = c(16, 17, 15, 18), lty = c(1,2,3,4), cex = 1.5, bty = "n", lwd = 3,
+       col = c("#FDE725FF", "#73D055FF", "#2D708EFF", "#481567FF"))
+
+# 2014
+plot(sp.a14.C, pch = 19, col = "#481567FF", xvar = c("individuals"), lty = 4, lwd = 4,
+     ylab = "Species Richness", xlab = "Number of Individuals", 
+     cex.lab = 1.6, cex.axis = 1.2, xlim = c(0, 400), ylim = c(0, 35))
+plot(sp.a14.L, add = TRUE, pch = 15, xvar = c("individuals"), lty = 1, lwd = 4, col = "#FDE725FF")
+plot(sp.a14.V, add = TRUE, pch = 4, xvar = c("individuals"), lty = 2, lwd = 4, col = "#73D055FF")
+plot(sp.a14.LV, add = TRUE, pch = 9, xvar = c("individuals"), lty = 3, lwd = 4, col = "#2D708EFF")
+text(15, 33, "2014", pos = 3, font = 2, cex = 2)
+
+
+# 2015
+plot(sp.a15.C, pch = 19, col = "#481567FF", xvar = c("individuals"), lty = 4, lwd = 4,
+     ylab = "Species Richness", xlab = "Number of Individuals", 
+     cex.lab = 1.6, cex.axis = 1.2, xlim = c(0, 400), ylim = c(0, 35))
+plot(sp.a15.L, add = TRUE, pch = 15, xvar = c("individuals"), lty = 1, lwd = 4, col = "#FDE725FF")
+plot(sp.a15.V, add = TRUE, pch = 4, xvar = c("individuals"), lty = 2, lwd = 4, col = "#73D055FF")
+plot(sp.a15.LV, add = TRUE, pch = 9, xvar = c("individuals"), lty = 3, lwd = 4, col = "#2D708EFF")
+text(15, 33, "2015", pos = 3, font = 2, cex = 2)
+
+dev.off()
