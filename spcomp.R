@@ -162,13 +162,6 @@ adonis2(a13.t.dist$beta.sne ~ a13.5$Treatment, permutations = 999)
 adonis2(a13.t.dist$beta.sne ~ a13.5$Canopy, permutations = 999)
 adonis2(a13.t.dist$beta.sne ~ a13.5$Veg, permutations = 999)
 
-# do we want to incorporate abundances?
-a13.nmds <- metaMDS(a13.4[5:45], distance = "bray", trymax = 500, autotransform = TRUE)
-a13.dist <- vegdist(a13.4[5:45], distance = "bray", binary = FALSE)
-adonis2(a13.dist ~ a13.4$Treatment, permutations = 999)
-adonis2(a13.dist ~ a13.4$Canopy, permutations = 999)
-adonis2(a13.dist ~ a13.4$Veg, permutations = 999)
-
 ################################################################################
 ## Now 2014
 ## Species data
@@ -304,14 +297,6 @@ adonis2(a14.t.dist$beta.sim ~ a14.6$Veg, permutations = 999)
 adonis2(a14.t.dist$beta.sne ~ a14.6$Treatment, permutations = 999)
 adonis2(a14.t.dist$beta.sne ~ a14.6$Canopy, permutations = 999)
 adonis2(a14.t.dist$beta.sne ~ a14.6$Veg, permutations = 999)
-
-# do we want to incorporate abundances?
-a14.nmds <- metaMDS(a14.5[5:44], distance = "bray", trymax = 500, autotransform = TRUE)
-a14.dist <- vegdist(a14.5[5:44], distance = "bray", binary = FALSE)
-adonis2(a14.dist ~ a14.5$Treatment, permutations = 999)
-adonis2(a14.dist ~ a14.5$Canopy, permutations = 999)
-adonis2(a14.dist ~ a14.5$Veg, permutations = 999)
-pairwise.adonis(a14.dist, a14.5$Treatment)
 
 ################################################################################
 ## Now 2015
@@ -452,14 +437,6 @@ adonis2(a15.t.dist$beta.sne ~ a15.5$Canopy, permutations = 999) # canopy gap nes
 pairwise.adonis(a15.t.dist$beta.sne, a15.5$Canopy)
 adonis2(a15.t.dist$beta.sne ~ a15.5$Veg, permutations = 999)
 
-# do we want to incorporate abundances?
-a15.nmds <- metaMDS(a15.4[5:46], distance = "bray", trymax = 500, autotransform = TRUE)
-a15.dist <- vegdist(a15.4[5:46], distance = "bray", binary = FALSE)
-adonis2(a15.dist ~ a15.4$Treatment, permutations = 999)
-adonis2(a15.dist ~ a15.4$Canopy, permutations = 999)
-adonis2(a15.dist ~ a15.4$Veg, permutations = 999)
-pairwise.adonis(a15.dist, a15.4$Treatment)
-
 ##################################################################################
 
 ## Functional beta-diversity
@@ -564,14 +541,6 @@ rownames(t.13) == colnames(a13.fun[5:43])
 library(FD)
 library(picante)
 library(gawdis)
-
-# community-weighed means
-cwm.13 <- functcomp(t.13, as.matrix(a13.fun[5:43]), CWM.type = "all")
-cwm.13
-write.csv(cwm.13, file = "CWMs_2013.csv")
-
-cp <- ggpairs(t.13, upper = list(continuous = wrap("cor", size = 5, color = "black")))
-cp + theme(strip.text.x = element_text(size = 18), strip.text.y = element_text(size = 14))
 
 # functional beta-diversity
 # weight body length traits and traits on the head to limit their total influence on the metric

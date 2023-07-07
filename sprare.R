@@ -19,6 +19,8 @@ library(viridis)
 library(vegan)
 library(fossil)
 
+citation("fossil")
+
 ################################################################################
 ## Start with 2013
 ## Species data
