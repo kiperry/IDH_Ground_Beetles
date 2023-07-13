@@ -53,24 +53,36 @@ dim(a13)
 summary(a13)
 
 ################################################################################
+# need to remove extra control sites
+
+a13.1 <- a13[which(a13$Disturbance == "Pre-Disturbance"),]
+
+# need to remove columns with zero values
+# removes species not collected in these sites during this year
+a13.2 <- a13.1[, colSums(a13.1 !=0) > 0]
+
+# double check
+colSums(a13.2[10:50]) # good to go
+
+################################################################################
 # create several new variables and add to data set
 
 # total abundance
-a13$tabund <- rowSums(a13[10:57])
-str(a13)
-dotchart(a13$tabund, group = a13$Treatment, pch = 19)
+a13.2$tabund <- rowSums(a13.2[10:50])
+str(a13.2)
+dotchart(a13.2$tabund, group = a13.2$Treatment, pch = 19)
 
 # species richness
-specnumber(a13[10:57])
-a13$rich <- specnumber(a13[10:57])
-str(a13)
-dotchart(a13$rich, group = a13$Treatment, pch = 19)
+specnumber(a13.2[10:50])
+a13.2$rich <- specnumber(a13.2[10:50])
+str(a13.2)
+dotchart(a13.2$rich, group = a13.2$Treatment, pch = 19)
 
 # species diversity
-diversity(a13[10:57], index = "shannon")
-a13$div <- diversity(a13[10:57], index = "shannon")
-str(a13)
-dotchart(a13$div, group = a13$Treatment, pch = 19)
+diversity(a13.2[10:50], index = "shannon")
+a13.2$div <- diversity(a13.2[10:50], index = "shannon")
+str(a13.2)
+dotchart(a13.2$div, group = a13.2$Treatment, pch = 19)
 
 ################################################################################
 # load the trait data
@@ -115,14 +127,14 @@ hist(log(t2$bll))
 # now we have to match up the trait matrix with every abundance matrix
 
 # start with 2013
-intersect(colnames(a13[10:57]), rownames(t2))
+intersect(colnames(a13.2[10:50]), rownames(t2))
 
-setdiff(colnames(a13[10:57]), rownames(t2))
-a13.2 <- a13[,-10]
-a13.2 <- a13.2[,-33]
-setdiff(colnames(a13.2[10:55]), rownames(t2))
+setdiff(colnames(a13.2[10:50]), rownames(t2))
+a13.3 <- a13.2[,-10]
+a13.3 <- a13.3[,-31]
+setdiff(colnames(a13.3[10:48]), rownames(t2))
 
-setdiff(rownames(t2), colnames(a13.2[10:55]))
+setdiff(rownames(t2), colnames(a13.3[10:48])) # need to update this now that I removed columns with zeros
 t.13 <- t2[-3,]
 t.13 <- t.13[-c(4:7),]
 t.13 <- t.13[-5,]
