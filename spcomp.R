@@ -534,7 +534,7 @@ t.13 <- t.13[-36,]
 setdiff(rownames(t.13), colnames(a13.fun[5:43]))
 
 intersect(colnames(a13.fun[5:43]), rownames(t.13))
-rownames(t.13) == colnames(a13.fun[5:43]) 
+rownames(t.13) == colnames(a13.fun[5:43])
 
 ##################################################################################
 
@@ -545,8 +545,6 @@ library(gawdis)
 # community-weighed means
 cwm.13 <- functcomp(t.13, as.matrix(a13.fun[5:43]), CWM.type = "all")
 cwm.13
-cwm.13.full <- cbind(a13.fun[1:4], cwm.13)
-write.csv(cwm.13.full, file = "CWMs_2013.csv")
 
 # functional beta-diversity
 # weight body length traits and traits on the head to limit their total influence on the metric
@@ -554,9 +552,18 @@ write.csv(cwm.13.full, file = "CWMs_2013.csv")
 
 tdis.13 <- gawdis(t.13, w.type = "optimized", opti.maxiter = 300,
                groups.weight = T, groups = c(1, 2, 2, 3, 3, 4, 5))
-attr(tdis.13, "correls")
-attr(tdis.13, "weights")
 
+# observed functional alpha diversity
+# run Rao Function first
+rao.13 <- Rao(sample = t(a13.fun[5:43]), dfunc = tdis.13, dphyl = NULL, weight = FALSE, Jost = TRUE, structure = NULL)
+rao13 <- rao.13$FD$Alpha
+
+# create separate csv file of CWMs and functional alpha diversity for GLMMs
+cwm.13.full <- cbind(a13.fun[1:4], cwm.13, rao13)
+write.csv(cwm.13.full, file = "CWMs_2013.csv")
+
+# principal coordinates analysis
+# need to condense functional traits into a few axes for the beta diversity calculations
 pco.13 <- dudi.pco(sqrt(tdis.13), scannf = FALSE, nf = 4) # select four axes
 scatter(pco.13)
 
@@ -672,18 +679,24 @@ rownames(t.14) == colnames(a14.fun[5:43])
 # community-weighed means
 cwm.14 <- functcomp(t.14, as.matrix(a14.fun[5:43]), CWM.type = "all")
 cwm.14
-cwm.14.full <- cbind(a14.fun[1:4], cwm.14)
-write.csv(cwm.14.full, file = "CWMs_2014.csv")
 
 # functional beta-diversity
 # weight body length traits and traits on the head to limit their total influence on the metric
 # calculate the distance matrix
-
 tdis.14 <- gawdis(t.14, w.type = "optimized", opti.maxiter = 300,
                   groups.weight = T, groups = c(1, 2, 2, 3, 3, 4, 5))
-attr(tdis.14, "correls")
-attr(tdis.14, "weights")
 
+# observed functional alpha diversity
+# run Rao Function first
+rao.14 <- Rao(sample = t(a14.fun[5:43]), dfunc = tdis.14, dphyl = NULL, weight = FALSE, Jost = TRUE, structure = NULL)
+rao14 <- rao.14$FD$Alpha
+
+# create separate csv file of CWMs and functional alpha diversity for GLMMs
+cwm.14.full <- cbind(a14.fun[1:4], cwm.14, rao14)
+write.csv(cwm.14.full, file = "CWMs_2014.csv")
+
+# principal coordinates analysis
+# need to condense functional traits into a few axes for the beta diversity calculations
 pco.14 <- dudi.pco(sqrt(tdis.14), scannf = FALSE, nf = 4) # select four axes
 scatter(pco.14)
 
@@ -797,8 +810,6 @@ rownames(t.15) == colnames(a15.fun[5:45])
 # community-weighed means
 cwm.15 <- functcomp(t.15, as.matrix(a15.fun[5:45]), CWM.type = "all")
 cwm.15
-cwm.15.full <- cbind(a15.fun[1:4], cwm.15)
-write.csv(cwm.15.full, file = "CWMs_2015.csv")
 
 # functional beta-diversity
 # weight body length traits and traits on the head to limit their total influence on the metric
@@ -806,9 +817,18 @@ write.csv(cwm.15.full, file = "CWMs_2015.csv")
 
 tdis.15 <- gawdis(t.15, w.type = "optimized", opti.maxiter = 300,
                   groups.weight = T, groups = c(1, 2, 2, 3, 3, 4, 5))
-attr(tdis.15, "correls")
-attr(tdis.15, "weights")
 
+# observed functional alpha diversity
+# run Rao Function first
+rao.15 <- Rao(sample = t(a15.fun[5:45]), dfunc = tdis.15, dphyl = NULL, weight = FALSE, Jost = TRUE, structure = NULL)
+rao15 <- rao.15$FD$Alpha
+
+# create separate csv file of CWMs and functional alpha diversity for GLMMs
+cwm.15.full <- cbind(a15.fun[1:4], cwm.15, rao15)
+write.csv(cwm.15.full, file = "CWMs_2015.csv")
+
+# principal coordinates analysis
+# need to condense functional traits into a few axes for the beta diversity calculations
 pco.15 <- dudi.pco(sqrt(tdis.15), scannf = FALSE, nf = 4) # select four axes
 scatter(pco.15)
 

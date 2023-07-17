@@ -77,7 +77,7 @@ a13.2$rich <- specnumber(a13.2[10:50])
 str(a13.2)
 dotchart(a13.2$rich, group = a13.2$Treatment, pch = 19)
 
-# species diversity
+# species (alpha) diversity
 diversity(a13.2[10:50], index = "shannon")
 a13.2$div <- diversity(a13.2[10:50], index = "shannon")
 str(a13.2)
