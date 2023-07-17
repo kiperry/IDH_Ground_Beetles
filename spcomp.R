@@ -542,11 +542,15 @@ library(FD)
 library(picante)
 library(gawdis)
 
+# community-weighed means
+cwm.13 <- functcomp(t.13, as.matrix(a13.fun[5:43]), CWM.type = "all")
+cwm.13
+cwm.13.full <- cbind(a13.fun[1:4], cwm.13)
+write.csv(cwm.13.full, file = "CWMs_2013.csv")
+
 # functional beta-diversity
 # weight body length traits and traits on the head to limit their total influence on the metric
 # calculate the distance matrix
-
-str(t.13)
 
 tdis.13 <- gawdis(t.13, w.type = "optimized", opti.maxiter = 300,
                groups.weight = T, groups = c(1, 2, 2, 3, 3, 4, 5))
@@ -668,7 +672,8 @@ rownames(t.14) == colnames(a14.fun[5:43])
 # community-weighed means
 cwm.14 <- functcomp(t.14, as.matrix(a14.fun[5:43]), CWM.type = "all")
 cwm.14
-write.csv(cwm.14, file = "CWMs_2014.csv")
+cwm.14.full <- cbind(a14.fun[1:4], cwm.14)
+write.csv(cwm.14.full, file = "CWMs_2014.csv")
 
 # functional beta-diversity
 # weight body length traits and traits on the head to limit their total influence on the metric
@@ -792,7 +797,8 @@ rownames(t.15) == colnames(a15.fun[5:45])
 # community-weighed means
 cwm.15 <- functcomp(t.15, as.matrix(a15.fun[5:45]), CWM.type = "all")
 cwm.15
-write.csv(cwm.15, file = "CWMs_2015.csv")
+cwm.15.full <- cbind(a15.fun[1:4], cwm.15)
+write.csv(cwm.15.full, file = "CWMs_2015.csv")
 
 # functional beta-diversity
 # weight body length traits and traits on the head to limit their total influence on the metric
