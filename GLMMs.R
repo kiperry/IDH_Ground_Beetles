@@ -30,6 +30,7 @@ library(nortest)
 library(tidyverse)
 library(ggpubr)
 library(rstatix)
+devtools::install_github("kassambara/rstatix")
 
 ################################################################################
 ## Start with 2013
@@ -67,24 +68,103 @@ a13.2 <- a13.1[, colSums(a13.1 !=0) > 0]
 colSums(a13.2[10:50]) # good to go
 
 # create several new variables and add to data set
+# run GLMs
 
+####################
 # total abundance
 a13.2$tabund <- rowSums(a13.2[10:50])
 str(a13.2)
 dotchart(a13.2$tabund, group = a13.2$Treatment, pch = 19)
 hist(a13.2$tabund)
 
+a13.2 %>%
+  group_by(Canopy, Veg, Interval) %>%
+  get_summary_stats(tabund, type = "mean_se")
+
+ggboxplot(a13.2, x = "Interval", y = "tabund", add = "point")
+ggboxplot(a13.2, x = "Interval", y = "tabund", color = "Canopy", palette = "jco")
+ggboxplot(a13.2, x = "Canopy", y = "tabund", color = "Veg", palette = "jco",
+  facet.by = "Interval", short.panel.labs = FALSE)
+
+a13.2 %>%
+  group_by(Canopy, Veg, Interval) %>%
+  identify_outliers(tabund)
+
+ggqqplot(a13.2, "tabund", facet.by = "Interval")
+ggqqplot(a13.2, "tabund", ggtheme = theme_bw()) + 
+          facet_grid(Interval ~ Canopy, labeller = "label_both")
+ggqqplot(a13.2, "tabund", ggtheme = theme_bw()) +
+          facet_grid(Canopy + Veg ~ Interval, labeller = "label_both")
+
+a13.2 %>%
+  group_by(Interval) %>%
+  levene_test(tabund ~ Canopy*Veg)
+
+aov.tabund <- anova_test(data = a13.2, dv = tabund, wid = Quadrat, within = Interval,
+                         between = c(Canopy, Veg))
+aov.tabund
+get_anova_table(aov.tabund)
+
+a13.2 %>%
+  pairwise_t_test(
+    tabund ~ Interval, paired = TRUE,
+    p.adjust.method = "bonferroni")
+
+####################
 # species richness
 specnumber(a13.2[10:50])
 a13.2$rich <- specnumber(a13.2[10:50])
 str(a13.2)
 dotchart(a13.2$rich, group = a13.2$Treatment, pch = 19)
+hist(a13.2$rich)
 
+a13.2 %>%
+  group_by(Interval) %>%
+  get_summary_stats(rich, type = "mean_se")
+
+ggboxplot(a13.2, x = "Interval", y = "rich", add = "point")
+
+a13.2 %>%
+  group_by(Interval) %>%
+  identify_outliers(rich)
+
+ggqqplot(a13.2, "rich", facet.by = "Interval")
+
+aov.rich <- anova_test(data = a13.2, dv = rich, wid = Quadrat, within = Interval)
+get_anova_table(aov.rich)
+
+a13.2 %>%
+  pairwise_t_test(
+    rich ~ Interval, paired = TRUE,
+    p.adjust.method = "bonferroni")
+
+####################
 # species (alpha) diversity
 diversity(a13.2[10:50], index = "shannon")
 a13.2$div <- diversity(a13.2[10:50], index = "shannon")
 str(a13.2)
 dotchart(a13.2$div, group = a13.2$Treatment, pch = 19)
+hist(a13.2$div)
+
+a13.2 %>%
+  group_by(Interval) %>%
+  get_summary_stats(div, type = "mean_se")
+
+ggboxplot(a13.2, x = "Interval", y = "div", add = "point")
+
+a13.2 %>%
+  group_by(Interval) %>%
+  identify_outliers(div)
+
+ggqqplot(a13.2, "div", facet.by = "Interval")
+
+aov.div <- anova_test(data = a13.2, dv = div, wid = Quadrat, within = Interval)
+get_anova_table(aov.div)
+
+a13.2 %>%
+  pairwise_t_test(
+    div ~ Interval, paired = TRUE,
+    p.adjust.method = "bonferroni")
 
 ################################################################################
 ## Now 2014 species data
