@@ -30,7 +30,6 @@ library(nortest)
 library(tidyverse)
 library(ggpubr)
 library(rstatix)
-devtools::install_github("kassambara/rstatix")
 
 ################################################################################
 ## Start with 2013
@@ -45,6 +44,7 @@ a13$Canopy <- as.factor(a13$Canopy)
 a13$Veg <- as.factor(a13$Veg)
 a13$Interval <- as.factor(a13$Interval)
 a13$Treatment <- as.factor(a13$Treatment)
+a13$Disturbance <- as.factor(a13$Disturbance)
 a13$Quadrat <- as.factor(a13$Quadrat)
 str(a13)
 
@@ -77,39 +77,54 @@ str(a13.2)
 dotchart(a13.2$tabund, group = a13.2$Treatment, pch = 19)
 hist(a13.2$tabund)
 
+# calculate mean and standard error
 a13.2 %>%
   group_by(Canopy, Veg, Interval) %>%
   get_summary_stats(tabund, type = "mean_se")
 
+# visually check data
 ggboxplot(a13.2, x = "Interval", y = "tabund", add = "point")
 ggboxplot(a13.2, x = "Interval", y = "tabund", color = "Canopy", palette = "jco")
+ggboxplot(a13.2, x = "Interval", y = "tabund", color = "Veg", palette = "jco")
+ggboxplot(a13.2, x = "Interval", y = "tabund", color = "Treatment", palette = "jco")
 ggboxplot(a13.2, x = "Canopy", y = "tabund", color = "Veg", palette = "jco",
   facet.by = "Interval", short.panel.labs = FALSE)
 
-a13.2 %>%
-  group_by(Canopy, Veg, Interval) %>%
-  identify_outliers(tabund)
+# check for outliers
+out.13 <- a13.2 %>%
+          group_by(Canopy, Veg, Interval) %>%
+          identify_outliers(tabund)
 
+# visually check for normality
 ggqqplot(a13.2, "tabund", facet.by = "Interval")
 ggqqplot(a13.2, "tabund", ggtheme = theme_bw()) + 
           facet_grid(Interval ~ Canopy, labeller = "label_both")
+ggqqplot(a13.2, "tabund", ggtheme = theme_bw()) + 
+  facet_grid(Interval ~ Veg, labeller = "label_both")
 ggqqplot(a13.2, "tabund", ggtheme = theme_bw()) +
           facet_grid(Canopy + Veg ~ Interval, labeller = "label_both")
 
+# test for equal variances
 a13.2 %>%
   group_by(Interval) %>%
   levene_test(tabund ~ Canopy*Veg)
 
-aov.tabund <- anova_test(data = a13.2, dv = tabund, wid = Quadrat, within = Interval,
-                         between = c(Canopy, Veg))
-aov.tabund
-get_anova_table(aov.tabund)
+options(scipen=999)
 
-a13.2 %>%
-  pairwise_t_test(
-    tabund ~ Interval, paired = TRUE,
-    p.adjust.method = "bonferroni")
+# run repeated measures anova
+aov.tabund.13 <- anova_test(data = a13.2, dv = tabund, wid = Quadrat, within = Interval,
+                         between = c(Canopy, Veg), detailed = TRUE)
+aov.tabund.13
 
+# gives overall significance
+get_anova_table(aov.tabund.13, correction = "GG")
+
+# gives significance of treatments for each interval
+two.way.13 <- a13.2 %>%
+            group_by(Interval) %>%
+            anova_test(dv = tabund, wid = Quadrat, between = c(Canopy, Veg))
+two.way.13
+  
 ####################
 # species richness
 specnumber(a13.2[10:50])
